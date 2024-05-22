@@ -1,29 +1,34 @@
 package main
 
-import "log"
+import (
+	"log"
+	"os"
+	"os/signal"
+)
 
 func main() {
 	log.Println("server is starting...")
 
-	netPoll := NewNetPoll()
+	netPoll := NewNetPoll("10.12.100.212", 8639)
 
-	err := netPoll.CreateEpoll()
-	if err != nil {
-		panic(err)
+	if err := netPoll.CreateEpoll(); err != nil {
+		log.Fatalf("fail to create epoll, err:%s", err)
 	}
 
-	err = netPoll.CreateListenFd("0.0.0.0", 8088)
-	if err != nil {
-		panic(err)
+	if err := netPoll.InitListenFd(); err != nil {
+		log.Fatalf("fail to listen, err:%s", err)
 	}
 
 	go func() {
-		err := netPoll.EventHandler()
-		netPoll.Close()
-		panic(err)
+		if err := netPoll.EventHandler(); err != nil {
+			defer netPoll.Close()
+			log.Fatalf("fail to exec event handler, err:%s", err)
+		}
 	}()
 
-	err = netPoll.Accept()
+	signalChan := make(chan os.Signal, 1)
+	signal.Notify(signalChan, os.Interrupt)
+	<-signalChan
 	netPoll.Close()
-	panic(err)
+	log.Println("exit successfully")
 }

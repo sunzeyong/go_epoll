@@ -7,7 +7,28 @@ import (
 )
 
 type SocketFd struct {
-	fd int
+	fd         int
+	isListenFd bool
+}
+
+func (s *SocketFd) Handler(netpoll *NetPoll) error {
+	if s.isListenFd {
+		nfd, _, err := syscall.Accept(s.fd)
+		if err != nil {
+			return err
+		}
+		err = netpoll.AddEpollItem(nfd)
+		if err != nil {
+			return nil
+		}
+		netpoll.AddConn(&SocketFd{
+			fd: nfd,
+		})
+	} else {
+		s.Read()
+	}
+
+	return nil
 }
 
 func (s *SocketFd) Read() {
@@ -16,6 +37,7 @@ func (s *SocketFd) Read() {
 
 	n, err := syscall.Read(s.fd, data)
 	if n == 0 {
+		log.Printf("socket fd:%v, read zero byte\n", s.fd)
 		return
 	}
 	if err != nil {

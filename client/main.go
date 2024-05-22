@@ -8,7 +8,12 @@ import (
 )
 
 func main() {
-	conn, err := net.Dial("tcp", "10.12.100.212:8088")
+	ConcurrentClients()
+
+}
+
+func PingOnce() {
+	conn, err := net.Dial("tcp", "10.12.100.212:8639")
 	if err != nil {
 		panic(err)
 	}
@@ -26,10 +31,12 @@ func main() {
 
 func ConcurrentClients() {
 	var wg sync.WaitGroup
-	for i := 0; i < 200; i++ {
+	for i := 0; i < 100; i++ {
 		wg.Add(1)
 		go func() {
-			conn, err := net.Dial("tcp", "127.0.0.1:8088")
+			defer wg.Done()
+
+			conn, err := net.Dial("tcp", "10.12.100.212:8639")
 			if err != nil {
 				panic(err)
 			}
@@ -43,7 +50,6 @@ func ConcurrentClients() {
 
 			time.Sleep(100 * time.Millisecond)
 			conn.Close()
-			wg.Done()
 		}()
 	}
 	wg.Wait()
