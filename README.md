@@ -1,5 +1,7 @@
 # 使用epoll编写网络服务
-server端全程使用系统调用，不使用go的任何封装
+talk is cheap, show me code!  
+让八股文变成代码，实践epoll使用方式。  
+server端全程使用系统调用，不使用go的任何封装  
 
 ## 如何运行
 ```
@@ -26,4 +28,7 @@ go run .
 # 基于epoll实现Reactor
 reactor模式也叫dispatcher模式，在收到IO多路复用监听事件后，根据事件类型分配给某个进程/线程处理。如果每次分配都创建新的线程，创建销毁过程会消耗cpu，所以这里一般使用线程池来处理。
 
+# todo
+- [ ] select和poll实现server端
+- [ ] 添加压测数据对比
 
